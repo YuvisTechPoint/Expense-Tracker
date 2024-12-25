@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FullCalendar CSS -->
+    <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' rel='stylesheet' />
+    <!-- FullCalendar JS -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js'></script>
+    <style>
+        /* Dark mode styles */
+        .transaction-container {
+            transition: all 0.3s ease;
+        }
+
+        /* Dark mode (default) */
+        .dark .transaction-container {
+            background-color: rgb(22, 28, 36);
+        }
+
+        .dark .form-label {
+            color: rgb(145, 158, 171);
+        }
+
+        .dark .form-input,
+        .dark .form-select {
+            background-color: rgb(33, 43, 54);
+            border-color: rgb(45, 55, 72);
+            color: rgb(255, 255, 255);
+        }
+
+        /* Light mode */
+        .light .transaction-container {
+            background-color: rgb(255, 255, 255);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .light .form-label {
+            color: rgb(75, 85, 99);
+        }
+
+        .light .form-input,
+        .light .form-select {
+            background-color: rgb(249, 250, 251);
+            border-color: rgb(229, 231, 235);
+            color: rgb(17, 24, 39);
+        }
+
+        .light .section-title {
+            color: rgb(37, 99, 235);
+        }
+
+        /* Common styles */
+        .transaction-container {
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            color: rgb(145, 158, 171);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: rgb(33, 43, 54);
+            border: 1px solid rgb(45, 55, 72);
+            color: rgb(255, 255, 255);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border-width: 1px;
+            border-style: solid;
+        }
+
+        .form-select {
+            width: 100%;
+            background-color: rgb(33, 43, 54);
+            border: 1px solid rgb(45, 55, 72);
+            color: rgb(255, 255, 255);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+
+        .section-title {
+            color: rgb(37, 99, 235);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-blue {
+            background-color: rgb(37, 99, 235);
+            color: white;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-blue:hover {
+            background-color: rgb(29, 78, 216);
+        }
+
+        /* Calculator Styles */
+        .calculator-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dark mode calculator */
+        .dark .calculator-container {
+            background: rgba(22, 28, 36, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .dark .calculator-button {
+            background: rgba(33, 43, 54, 0.8);
+            backdrop-filter: blur(8px);
+            color: rgb(255, 255, 255);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .calculator-display {
+            background: rgba(33, 43, 54, 0.8);
+            backdrop-filter: blur(8px);
+            color: rgb(255, 255, 255);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Light mode calculator */
+        .light .calculator-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .light .calculator-button {
+            background: rgba(243, 244, 246, 0.8);
+            backdrop-filter: blur(8px);
+            color: rgb(17, 24, 39);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .light .calculator-display {
+            background: rgba(243, 244, 246, 0.8);
+            backdrop-filter: blur(8px);
+            color: rgb(17, 24, 39);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Common calculator styles */
+        .calculator-container {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            width: 20rem;
+            max-width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .calculator-display {
+            width: 100%;
+            padding: 0.75rem;
+            text-align: right;
+            font-size: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calculator-button {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calculator-button:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .calculator-button:active {
+            transform: translateY(1px);
+        }
+
+        .calculator-button.span-2 {
+            grid-column: span 2;
+        }
+
+        /* Update Clear Data button styles */
+        .clear-data-btn {
+            background-color: rgba(96, 165, 250, 0.1); /* Light ice blue background */
+            color: rgb(59, 130, 246); /* Ice blue text color */
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .clear-data-btn:hover {
+            background-color: rgba(96, 165, 250, 0.2); /* Darker on hover */
+        }
+
+        /* Dark mode specific */
+        .dark .clear-data-btn {
+            color: rgb(209, 213, 219); /* Light gray color matching the icon */
+            background-color: rgba(96, 165, 250, 0.1);;
+        }
+
+        /* Light mode specific */
+        .light .clear-data-btn {
+            color: rgb(59, 130, 246); /* Ice blue for light mode */
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Summary text styling */
+        .summary-text {
+            transition: color 0.3s ease;
+        }
+
+        /* Light mode specific */
+        .light .summary-text {
+            color: rgb(59, 130, 246) !important; /* Ice blue color */
+        }
+
+        /* Dark mode specific */
+        .dark .summary-text {
+            color: rgb(209, 213, 219) !important; /* Original light gray color */
+        }
+
+        /* Total Balance amount styling */
+        .balance-amount {
+            color: rgb(59, 130, 246) !important; /* Ice blue color */
+        }
+
+        /* Update header text size */
+        #header-text {
+            font-size: 1.28rem; /* Adjust this value to make the text smaller */
+        }
+
+        /* Add this to your CSS */
+        .bg-white {
+            background-color: white;
+        }
+
+        .text-gray-900 {
+            color: #1f2937; /* Dark gray for text */
+        }
+
+        .bg-gray-800 {
+            background-color: #1f2937; /* Dark background */
+        }
+
+        .text-gray-200 {
+            color: #e5e7eb; /* Light gray for text */
+        }
+
+        /* Add this to your CSS */
+        .category-breakdown-title {
+            color: rgb(59, 130, 246); /* Ice blue color */
+        }
+
+        /* Add this to your CSS */
+        .calculator-button {
+            color: rgb(59, 130, 246); /* Ice blue color */
+        }
+
+        /* Add this to your CSS */
+        .calculator-display {
+            color: rgb(59, 130, 246); /* Ice blue color */
+        }
+
+        /* Add this to your CSS */
+        .mobile-menu .text-gray-200 {
+            color: #1f2937; /* Black color for light mode */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen" id="body">
+    <header class="bg-gray-800 p-4 text-center flex justify-between">
+        <button id="hamburger-menu" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 md:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <h1 class="text-3xl font-bold" id="header-text">Expense Tracker</h1>
+        <div class="flex items-center gap-2">
+            <button id="theme-toggle" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 flex items-center justify-center">
+                <svg id="theme-toggle-dark-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+                <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path>
+                </svg>
+            </button>
+            <button id="calculator" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+            </button>
+            <button id="clear-data" class="clear-data-btn">Clear</button>
+        </div>
+    </header>
+    <nav id="mobile-menu" class="bg-gray-800 p-4 text-center flex flex-col absolute top-0 left-0 w-full h-screen transform -translate-x-full transition-transform duration-500 dark-theme">
+        <div class="flex items-center justify-between mb-4">
+            <button id="close-menu" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h1 class="text-xl font-bold text-gray-200 flex-grow text-center">Expense Tracker</h1> <!-- Centered text -->
+        </div>
+        
+        <!-- Monthly Expense Filter Section -->
+        <div class="mb-4">
+            <label for="date-select" class="form-label">Select Date</label>
+            <input type="date" id="date-select" class="form-input" />
+            <button id="view-date-expense" class="btn-blue mt-2">View Expenses</button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <button id="theme-toggle-mobile" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 flex items-center justify-center gap-2">
+                <svg id="theme-toggle-dark-icon-mobile" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+                <svg id="theme-toggle-light-icon-mobile" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path>
+                </svg>
+                <span>Switch to Light Mode</span>
+            </button>
+            <button id="calculator-mobile" class="bg-gray-600 text-gray-200 p-2 rounded-lg hover:bg-gray-500 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                <span>Calculator</span>
+            </button>
+            <button id="clear-data-mobile" class="clear-data-btn">Clear</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Total Summary Section -->
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h2 class="text-2xl font-bold mb-2">Total Summary</h2>
+                <div id="mobile-total-summary">
+                    <div class="text-green-400 mb-2">Total Earnings: ₹<span id="mobile-total-earning">0.00</span></div>
+                    <div class="text-red-400 mb-2">Total Expenses: ₹<span id="mobile-total-expense">0.00</span></div>
+                    <div class="text-blue-400 font-bold">Balance: ₹<span id="mobile-total-balance" class="balance-amount">0.00</span></div>
+                </div>
+            </div>
+
+            <!-- Earnings Section -->
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h2 class="text-2xl font-bold mb-2">Earnings</h2>
+                <ul id="earnings-list" class="list-none p-0 m-0">
+                </ul>
+            </div>
+
+            <!-- Previous Expenses Section -->
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h2 class="text-2xl font-bold mb-2">Previous Expenses</h2>
+                <ul id="previous-expenses" class="list-none p-0 m-0">
+                </ul>
+            </div>
+
+            <!-- Summary Chart Section -->
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <h2 class="text-2xl font-bold mb-2">Summary Chart</h2>
+                <div style="height: 300px;">
+                    <canvas id="mobile-expenses-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
+        <section class="transaction-container">
+            <h2 class="section-title">Add Transaction</h2>
+            <form id="add-transaction-form">
+                <label for="amount" class="form-label">Amount (₹)</label>
+                <input type="number" 
+                       id="amount" 
+                       class="form-input" 
+                       required>
+
+                <label for="type" class="form-label">Type</label>
+                <select id="type" 
+                        class="form-select" 
+                        required>
+                    <option value="expense">Expense</option>
+                    <option value="earning">Earning</option>
+                </select>
+
+                <label for="category" class="form-label">Category</label>
+                <select id="category" 
+                        class="form-select" 
+                        required>
+                    <option value="">Select Category</option>
+                    <!-- Expense Categories -->
+                    <option value="Food" class="expense-category">Food</option>
+                    <option value="Transportation" class="expense-category">Transportation</option>
+                    <option value="Entertainment" class="expense-category">Entertainment</option>
+                    <option value="Household" class="expense-category">Household</option>
+                    <option value="Petrol" class="expense-category">Petrol</option>
+                    <option value="liquid Expense" class="expense-category">Liquid Expense</option>
+                    <option value="Accessories" class="expense-category">Accessories</option>
+                    <option value="Lend" class="expense-category">Lend</option>
+                    <option value="Medicine" class="expense-category">Medicine</option>
+                    <!-- Earning Categories -->
+                    <option value="Fees" class="earning-category">Fees</option>
+                    <option value="Investment" class="earning-category">Investment</option>
+                    <option value="Allowances" class="earning-category">Allowances</option>
+                    <option value="Additional Source" class="earning-category">Additional Source</option>
+                    <option value="Loose Cash" class="earning-category">Loose Cash</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <button type="submit" class="btn-blue">
+                    Add Transaction
+                </button>
+            </form>
+        </section>
+        <section class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Total Balance: <span id="total-balance" class="balance-amount">₹0.00</span></h2>
+            <canvas id="chart" width="400" height="300"></canvas>
+        </section>
+        <section class="mb-6">
+            <h2 class="category-breakdown-title text-2xl font-bold mb-2">Category-wise Breakdown:</h2>
+            <ul id="category-breakdown" class="list-none p-0 m-0">
+            </ul>
+        </section>
+        <section class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Statistical Graph:</h2>
+            <canvas id="statistical-graph" width="400" height="300"></canvas>
+        </section>
+        <section class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Earning vs Expense Comparison:</h2>
+            <canvas id="comparison-graph" width="400" height="300"></canvas>
+        </section>
+        <section class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Earning and Expense Summary:</h2>
+            <div class="flex flex-col">
+                <div class="flex justify-between mb-2">
+                    <p class="summary-text">Total Earning: <span id="total-earning">₹112.00</span></p>
+                    <p class="summary-text">Total Expense: <span id="total-expense">₹99.00</span></p>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <p class="summary-text">Earning Percentage: <span id="earning-percentage">53.08%</span></p>
+                    <p class="summary-text">Expense Percentage: <span id="expense-percentage">46.92%</span></p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="mb-6">
+            <h2 class="text-2xl font-bold mb-2">Monthly Expense Analysis</h2>
+            <div id="calendar"></div>
+        </section>
+    </main>
+    <div id="calculator-modal" class="calculator-modal hidden">
+        <div class="calculator-container">
+            <!-- Close button -->
+            <div class="flex justify-end mb-2">
+                <button onclick="closeCalculator()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <input type="text" id="display" class="calculator-display" disabled>
+            
+            <div class="calculator-grid">
+                <button class="calculator-button" onclick="clearDisplay()">C</button>
+                <button class="calculator-button" onclick="updateDisplay('%')">%</button>
+                <button class="calculator-button" onclick="updateDisplay('/')">/</button>
+                <button class="calculator-button" onclick="updateDisplay('*')">×</button>
+                
+                <button class="calculator-button" onclick="updateDisplay('7')">7</button>
+                <button class="calculator-button" onclick="updateDisplay('8')">8</button>
+                <button class="calculator-button" onclick="updateDisplay('9')">9</button>
+                <button class="calculator-button" onclick="updateDisplay('-')">-</button>
+                
+                <button class="calculator-button" onclick="updateDisplay('4')">4</button>
+                <button class="calculator-button" onclick="updateDisplay('5')">5</button>
+                <button class="calculator-button" onclick="updateDisplay('6')">6</button>
+                <button class="calculator-button" onclick="updateDisplay('+')">+</button>
+                
+                <button class="calculator-button" onclick="updateDisplay('1')">1</button>
+                <button class="calculator-button" onclick="updateDisplay('2')">2</button>
+                <button class="calculator-button" onclick="updateDisplay('3')">3</button>
+                <button class="calculator-button" onclick="calculate()">=</button>
+                
+                <button class="calculator-button span-2" onclick="updateDisplay('0')">0</button>
+                <button class="calculator-button" onclick="updateDisplay('.')">.</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let totalBalance = 0;
+        let totalEarning = 0;
+        let totalExpense = 0;
+        let categoryBreakdown = {};
+        let chart;
+        let statisticalGraph;
+        let comparisonGraph;
+        let isDarkMode = true;
+        let mobileExpensesChart;
+
+        document.getElementById('add-transaction-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const type = document.getElementById('type').value;
+            transactions.push({ amount, category, type, date: new Date().toISOString() });
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateTotalBalance();
+            updateTotalEarning();
+            updateTotalExpense();
+            updateCategoryBreakdown();
+            updateChart();
+            updateStatisticalGraph();
+            updateComparisonGraph();
+            updateSummary();
+            updatePreviousExpenses();
+            updateEarningsList();
+            document.getElementById('amount').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('type').value = 'expense';
+            updateMobileSummary();
+            updateMobileExpensesChart();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Desktop theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                updateTheme();
+            });
+
+            // Mobile theme toggle
+            document.getElementById('theme-toggle-mobile').addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                updateTheme();
+                // Update the button text based on the current mode
+                const themeToggleText = document.getElementById('theme-toggle-text-mobile');
+                themeToggleText.textContent = isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+            });
+
+            // Initial theme setup
+            updateTheme();
+        });
+
+        function updateTheme() {
+            const body = document.body;
+            if (isDarkMode) {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                // Update theme toggle buttons
+                document.getElementById('theme-toggle-dark-icon').classList.remove('hidden');
+                document.getElementById('theme-toggle-light-icon').classList.add('hidden');
+                document.getElementById('theme-toggle-dark-icon-mobile').classList.remove('hidden');
+                document.getElementById('theme-toggle-light-icon-mobile').classList.add('hidden');
+                document.getElementById('theme-toggle-mobile').querySelector('span').textContent = 'Switch to Light Mode';
+                
+                // Main content dark mode
+                document.getElementById('body').classList.remove('bg-gray-100', 'text-gray-900');
+                document.getElementById('body').classList.add('bg-gray-900', 'text-gray-200');
+                
+                // Header dark mode
+                document.querySelector('header:not(#mobile-menu)').classList.remove('bg-white', 'shadow-md');
+                document.querySelector('header:not(#mobile-menu)').classList.add('bg-gray-800');
+                
+                // Header buttons dark mode
+                document.querySelectorAll('header:not(#mobile-menu) button svg').forEach(icon => {
+                    icon.classList.remove('text-blue-400');
+                    icon.classList.add('text-gray-200');
+                });
+                
+                document.querySelectorAll('header:not(#mobile-menu) button').forEach(button => {
+                    button.classList.remove('bg-blue-50', 'hover:bg-blue-100');
+                    button.classList.add('bg-gray-600', 'hover:bg-gray-500');
+                });
+            } else {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                // Update theme toggle buttons
+                document.getElementById('theme-toggle-dark-icon').classList.add('hidden');
+                document.getElementById('theme-toggle-light-icon').classList.remove('hidden');
+                document.getElementById('theme-toggle-dark-icon-mobile').classList.add('hidden');
+                document.getElementById('theme-toggle-light-icon-mobile').classList.remove('hidden');
+                document.getElementById('theme-toggle-mobile').querySelector('span').textContent = 'Switch to Dark Mode';
+                
+                // Main content light mode
+                document.getElementById('body').classList.remove('bg-gray-900', 'text-gray-200');
+                document.getElementById('body').classList.add('bg-gray-100', 'text-gray-900');
+                
+                // Header light mode
+                document.querySelector('header:not(#mobile-menu)').classList.remove('bg-gray-800');
+                document.querySelector('header:not(#mobile-menu)').classList.add('bg-white', 'shadow-md');
+                
+                // Header buttons light mode with ice blue color
+                document.querySelectorAll('header:not(#mobile-menu) button svg').forEach(icon => {
+                    icon.classList.remove('text-gray-200');
+                    icon.classList.add('text-blue-400');
+                });
+                
+                document.querySelectorAll('header:not(#mobile-menu) button').forEach(button => {
+                    button.classList.remove('bg-gray-600', 'hover:bg-gray-500');
+                    button.classList.add('bg-blue-50', 'hover:bg-blue-100');
+                });
+            }
+
+            // Always keep mobile menu dark themed
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.remove('bg-white', 'bg-gray-100');
+            mobileMenu.classList.add('bg-gray-800');
+            mobileMenu.classList.remove('text-gray-900');
+            mobileMenu.classList.add('text-gray-200');
+        }
+
+        document.getElementById('clear-data').addEventListener('click', () => {
+            transactions = [];
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateTotalBalance();
+            updateTotalEarning();
+            updateTotalExpense();
+            updateCategoryBreakdown();
+            updateChart();
+            updateStatisticalGraph();
+            updateComparisonGraph();
+            updateSummary();
+            updatePreviousExpenses();
+            updateEarningsList();
+            updateMobileSummary();
+            updateMobileExpensesChart();
+        });
+
+        document.getElementById('clear-data-mobile').addEventListener('click', () => {
+            transactions = [];
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateTotalBalance();
+            updateTotalEarning();
+            updateTotalExpense();
+            updateCategoryBreakdown();
+            updateChart();
+            updateStatisticalGraph();
+            updateComparisonGraph();
+            updateSummary();
+            updatePreviousExpenses();
+            updateEarningsList();
+            document.getElementById('mobile-menu').classList.add('transform', '-translate-x-full');
+            updateMobileSummary();
+            updateMobileExpensesChart();
+        });
+
+        document.getElementById('hamburger-menu').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.remove('transform', '-translate-x-full');
+            updateMobileExpensesChart();
+        });
+
+        document.getElementById('close-menu').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.add('transform', '-translate-x-full');
+        });
+
+        function updateTotalBalance() {
+            totalBalance = transactions.reduce((acc, curr) => {
+                if (curr.type === 'expense') {
+                    return acc - curr.amount;
+                } else {
+                    return acc + curr.amount;
+                }
+            }, 0);
+            document.getElementById('total-balance').innerText = `₹${totalBalance.toFixed(2)}`;
+        }
+
+        function updateTotalEarning() {
+            totalEarning = transactions.reduce((acc, curr) => {
+                if (curr.type === 'earning') {
+                    return acc + curr.amount;
+                } else {
+                    return acc;
+                }
+            }, 0);
+            document.getElementById('total-earning').innerText = `₹${totalEarning.toFixed(2)}`;
+        }
+
+        function updateTotalExpense() {
+            totalExpense = transactions.reduce((acc, curr) => {
+                if (curr.type === 'expense') {
+                    return acc + curr.amount;
+                } else {
+                    return acc;
+                }
+            }, 0);
+            document.getElementById('total-expense').innerText = `₹${totalExpense.toFixed(2)}`;
+        }
+
+        function updateCategoryBreakdown() {
+            categoryBreakdown = {};
+            transactions.forEach((transaction) => {
+                if (!categoryBreakdown[transaction.category]) {
+                    categoryBreakdown[transaction.category] = 0;
+                }
+                if (transaction.type === 'expense') {
+                    categoryBreakdown[transaction.category] -= transaction.amount;
+                } else {
+                    categoryBreakdown[transaction.category] += transaction.amount;
+                }
+            });
+            const breakdownList = document.getElementById('category-breakdown');
+            breakdownList.innerHTML = '';
+            Object.keys(categoryBreakdown).forEach((category) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('mb-2');
+                listItem.innerText = `${category}: ₹${categoryBreakdown[category].toFixed(2)}`;
+                breakdownList.appendChild(listItem);
+            });
+        }
+
+        function updateChart() {
+            if (chart) {
+                chart.destroy();
+            }
+            const ctx = document.getElementById('chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categoryBreakdown),
+                    datasets: [{
+                        label: 'Spending',
+                        data: Object.values(categoryBreakdown),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateStatisticalGraph() {
+            if (statisticalGraph) {
+                statisticalGraph.destroy();
+            }
+            const ctx = document.getElementById('statistical-graph').getContext('2d');
+            statisticalGraph = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(categoryBreakdown),
+                    datasets: [{
+                        label: 'Spending',
+                        data: Object.values(categoryBreakdown),
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateComparisonGraph() {
+            if (comparisonGraph) {
+                comparisonGraph.destroy();
+            }
+            const ctx = document.getElementById('comparison-graph').getContext('2d');
+            comparisonGraph = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Earning', 'Expense'],
+                    datasets: [{
+                        label: 'Earning vs Expense',
+                        data: [totalEarning, totalExpense],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 99, 132, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        function updateSummary() {
+            const earningPercentage = (totalEarning / (totalEarning + totalExpense)) * 100;
+            const expensePercentage = (totalExpense / (totalEarning + totalExpense)) * 100;
+            document.getElementById('earning-percentage').innerText = `${earningPercentage.toFixed(2)}%`;
+            document.getElementById('expense-percentage').innerText = `${expensePercentage.toFixed(2)}%`;
+        }
+
+        function updatePreviousExpenses() {
+            const previousExpensesList = document.getElementById('previous-expenses');
+            previousExpensesList.innerHTML = '';
+
+            // Create an object to store totals by category
+            const categoryTotals = {};
+
+            // Calculate totals for each category
+            transactions.forEach(transaction => {
+                if (transaction.type === 'expense') {
+                    if (!categoryTotals[transaction.category]) {
+                        categoryTotals[transaction.category] = 0;
+                    }
+                    categoryTotals[transaction.category] += transaction.amount;
+                }
+            });
+
+            // Display category totals
+            Object.entries(categoryTotals).forEach(([category, total]) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('mb-2', 'text-red-400');
+                listItem.innerText = `${category}: ₹${total.toFixed(2)}`;
+                previousExpensesList.appendChild(listItem);
+            });
+        }
+
+        function updateEarningsList() {
+            const earningsList = document.getElementById('earnings-list');
+            earningsList.innerHTML = '';
+            
+            const earningTransactions = transactions.filter(transaction => transaction.type === 'earning');
+            
+            earningTransactions.forEach((transaction, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('mb-2', 'text-green-400');
+                listItem.innerText = `Earning ${index + 1}: ₹${transaction.amount} - ${transaction.category}`;
+                earningsList.appendChild(listItem);
+            });
+        }
+
+        function updateMobileSummary() {
+            const totalEarning = transactions
+                .filter(t => t.type === 'earning')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const balance = totalEarning - totalExpense;
+
+            document.getElementById('mobile-total-earning').textContent = totalEarning.toFixed(2);
+            document.getElementById('mobile-total-expense').textContent = totalExpense.toFixed(2);
+            document.getElementById('mobile-total-balance').textContent = balance.toFixed(2);
+        }
+
+        function updateMobileExpensesChart() {
+            if (mobileExpensesChart) {
+                mobileExpensesChart.destroy();
+            }
+
+            const ctx = document.getElementById('mobile-expenses-chart').getContext('2d');
+            
+            // Calculate totals for both earnings and expenses by category
+            const categoryTotals = {
+                earnings: {},
+                expenses: {}
+            };
+
+            transactions.forEach(transaction => {
+                const type = transaction.type;
+                const category = transaction.category;
+                const amount = transaction.amount;
+
+                if (type === 'earning') {
+                    if (!categoryTotals.earnings[category]) {
+                        categoryTotals.earnings[category] = 0;
+                    }
+                    categoryTotals.earnings[category] += amount;
+                } else {
+                    if (!categoryTotals.expenses[category]) {
+                        categoryTotals.expenses[category] = 0;
+                    }
+                    categoryTotals.expenses[category] += amount;
+                }
+            });
+
+            // Prepare data for the chart
+            const earningCategories = Object.keys(categoryTotals.earnings);
+            const expenseCategories = Object.keys(categoryTotals.expenses);
+            const earningValues = Object.values(categoryTotals.earnings);
+            const expenseValues = Object.values(categoryTotals.expenses);
+
+            // Only create chart if there are transactions
+            if (earningCategories.length > 0 || expenseCategories.length > 0) {
+                mobileExpensesChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [...earningCategories.map(cat => `${cat} (Earning)`), 
+                                ...expenseCategories.map(cat => `${cat} (Expense)`)],
+                        datasets: [{
+                            data: [...earningValues, ...expenseValues],
+                            backgroundColor: [
+                                // Colors for earnings (green shades)
+                                ...Array(earningCategories.length).fill().map(() => 'rgba(72, 187, 120, 0.8)'),
+                                // Colors for expenses (red shades)
+                                ...Array(expenseCategories.length).fill().map(() => 'rgba(245, 101, 101, 0.8)')
+                            ],
+                            borderColor: [
+                                // Border colors for earnings
+                                ...Array(earningCategories.length).fill().map(() => 'rgba(72, 187, 120, 1)'),
+                                // Border colors for expenses
+                                ...Array(expenseCategories.length).fill().map(() => 'rgba(245, 101, 101, 1)')
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    color: '#739BD0',
+                                    padding: 10,
+                                    font: {
+                                        size: 12
+                                    },
+                                    generateLabels: function(chart) {
+                                        const data = chart.data;
+                                        if (data.labels.length && data.datasets.length) {
+                                            return data.labels.map((label, i) => {
+                                                const value = data.datasets[0].data[i];
+                                                return {
+                                                    text: `${label}: ₹${value.toFixed(2)}`,
+                                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                                    strokeStyle: data.datasets[0].borderColor[i],
+                                                    lineWidth: 1,
+                                                    hidden: isNaN(value) || value === 0,
+                                                    index: i,
+                                                    textColor: '#739BD0'
+                                                };
+                                            });
+                                        }
+                                        return [];
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        return `${label}: ₹${value.toFixed(2)}`;
+                                    }
+                                },
+                                titleColor: '#739BD0',
+                                bodyColor: '#739BD0',
+                                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                                padding: 10
+                            }
+                        }
+                    }
+                });
+            } else {
+                // If no data, clear the canvas and show message
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.fillStyle = '#739BD0';
+                ctx.textAlign = 'center';
+                ctx.font = '14px Arial';
+                ctx.fillText('No transactions to display', ctx.canvas.width/2, ctx.canvas.height/2);
+            }
+        }
+
+        let display = document.getElementById('display');
+        let currentCalculation = '';
+
+        function updateDisplay(value) {
+            currentCalculation += value;
+            display.value = currentCalculation;
+        }
+
+        function clearDisplay() {
+            currentCalculation = '';
+            display.value = currentCalculation;
+        }
+
+        function calculate() {
+            try {
+                let result = eval(currentCalculation);
+                display.value = result;
+                currentCalculation = result.toString();
+            } catch (error) {
+                display.value = 'Error';
+                currentCalculation = '';
+            }
+        }
+
+        // Add calculator modal functions
+        function openCalculator() {
+            document.getElementById('calculator-modal').classList.remove('hidden');
+            clearDisplay();
+        }
+
+        function closeCalculator() {
+            document.getElementById('calculator-modal').classList.add('hidden');
+        }
+
+        // Add click event listeners for calculator buttons
+        document.getElementById('calculator').addEventListener('click', openCalculator);
+        document.getElementById('calculator-mobile').addEventListener('click', () => {
+            openCalculator();
+            document.getElementById('mobile-menu').classList.add('transform', '-translate-x-full');
+        });
+
+        // Close calculator when clicking outside
+        document.getElementById('calculator-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('calculator-modal')) {
+                closeCalculator();
+            }
+        });
+
+        // Add this to your existing JavaScript
+        document.getElementById('type').addEventListener('change', function() {
+            const type = this.value;
+            const categorySelect = document.getElementById('category');
+            const options = categorySelect.options;
+
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                if (type === 'expense') {
+                    if (option.classList.contains('earning-category')) {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = '';
+                    }
+                } else if (type === 'earning') {
+                    if (option.classList.contains('expense-category')) {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = '';
+                    }
+                }
+            }
+            // Reset category selection when type changes
+            categorySelect.value = '';
+        });
+
+        // Initialize category visibility on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('type').dispatchEvent(new Event('change'));
+        });
+
+        updateTotalBalance();
+        updateTotalEarning();
+        updateTotalExpense();
+        updateCategoryBreakdown();
+        updateChart();
+        updateStatisticalGraph();
+        updateComparisonGraph();
+        updateSummary();
+        updatePreviousExpenses();
+        updateEarningsList();
+        updateMobileSummary();
+        updateMobileExpensesChart();
+
+        document.getElementById('view-date-expense').addEventListener('click', () => {
+            const selectedDate = document.getElementById('date-select').value;
+            
+            if (!selectedDate) {
+                alert("Please select a date.");
+                return; // Prevent further action if no date is selected
+            }
+
+            // Filter expenses based on the selected date
+            const filteredExpenses = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date).toISOString().split('T')[0]; // Format date to YYYY-MM-DD
+                return transactionDate === selectedDate && transaction.type === 'expense';
+            });
+
+            // Display the filtered expenses
+            displayExpenses(filteredExpenses);
+        });
+
+        // Function to display expenses
+        function displayExpenses(expenses) {
+            const expensesList = document.getElementById('previous-expenses');
+            expensesList.innerHTML = ''; // Clear previous entries
+
+            if (expenses.length === 0) {
+                expensesList.innerHTML = '<li>No expenses found for this date.</li>';
+                return;
+            }
+
+            expenses.forEach(expense => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${expense.category}: ₹${expense.amount}`;
+                expensesList.appendChild(listItem);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: transactions.map(transaction => {
+                    return {
+                        title: transaction.type === 'expense' ? `Expense: ₹${transaction.amount}` : `Earning: ₹${transaction.amount}`,
+                        start: transaction.date, // Assuming you have a date property in 'YYYY-MM-DD' format
+                        allDay: true
+                    };
+                }),
+                dateClick: function(info) {
+                    const clickedDate = info.dateStr;
+                    const dateExpenses = transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.date);
+                        return transactionDate.toISOString().split('T')[0] === clickedDate;
+                    });
+
+                    if (dateExpenses.length > 0) {
+                        alert(`Expenses for ${clickedDate}:\n${dateExpenses.map(exp => `${exp.type}: ₹${exp.amount}`).join('\n')}`);
+                    } else {
+                        alert(`No expenses found for ${clickedDate}.`);
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
